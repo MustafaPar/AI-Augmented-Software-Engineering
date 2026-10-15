@@ -18,7 +18,19 @@ POLICY = """Refund policy:
 """
 
 # TODO: Fill this in! Encourage step-by-step reasoning, ending with DECISION: YES/NO.
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """You are a support agent who decides whether an order is eligible for a refund.
+Reason step by step, checking EVERY rule of the refund policy below in order:
+Step 1 - Time: Was it purchased within 30 days? (More than 30 days means NOT eligible.)
+Step 2 - Condition: Is the item unused / in original condition? (If the customer does not mention any use or damage, assume it is unused.)
+Step 3 - Final sale: Is it a final-sale item? (If it is final sale, it is NOT eligible. If not mentioned, assume it is not final sale.)
+Step 4 - Conclusion: The order is eligible only if it passes ALL rules. If any single rule fails, it is not eligible.
+
+Write one short line for each step. Then write the final line exactly as either:
+DECISION: YES
+or
+DECISION: NO
+Nothing may come after the DECISION line.
+"""
 
 CASES = [
     ("Bought 10 days ago, unused, not final sale.", "YES"),

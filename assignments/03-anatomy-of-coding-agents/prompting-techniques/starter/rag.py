@@ -22,11 +22,41 @@ def load_chunks() -> list[str]:
 
 # TODO: return the subset of chunks relevant to `question` (simple keyword overlap is fine).
 def YOUR_RETRIEVER(question: str, chunks: list[str]) -> list[str]:
-    return []
+    stopwords = {
+        "a", "an", "the", "do", "does", "did", "i", "you", "your", "my", "me", "we", "us",
+        "is", "are", "was", "to", "of", "for", "in", "on", "at", "and", "or", "it", "can",
+        "how", "what", "whats", "when", "where", "why", "who", "which", "have", "has",
+        "long", "with", "be", "s",
+    }
+
+    def _keywords(text: str) -> set[str]:
+        words = "".join(c.lower() if c.isalnum() else " " for c in text).split()
+        return {w for w in words if w not in stopwords and len(w) >= 3}
+
+    def _related(a: str, b: str) -> bool:
+        # Prefix match handles simple word forms: ship/shipping, return/returns,
+        # international/internationally.
+        short, long_ = sorted((a, b), key=len)
+        return len(short) >= 4 and long_.startswith(short)
+
+    q_words = _keywords(question)
+    scored = []
+    for chunk in chunks:
+        c_words = _keywords(chunk)
+        score = sum(any(_related(q, c) for c in c_words) for q in q_words)
+        if score > 0:
+            scored.append((score, chunk))
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [chunk for _, chunk in scored[:3]]
 
 
 # TODO: Fill this in! Force the model to answer only from the provided context.
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """You are a customer-support assistant for an online store.
+Answer the customer's question using ONLY the information in the Context section of their message.
+Do not use outside knowledge, and do not guess or invent details.
+If the Context is empty or does not contain the answer, reply exactly:
+I don't know based on our help center information.
+When the answer is in the Context, reply in one or two short sentences and include the specific facts (numbers, time periods, places) from the Context."""
 
 CASES = [
     ("How long do I have to return an item?", ["30 days"]),
